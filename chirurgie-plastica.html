@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plastic Surgery Exam Prep</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .quiz-container {
+            background-color: white;
+            width: 100%;
+            max-width: 700px;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        /* Navigation Modes Header */
+        .mode-navigation {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .mode-btn {
+            flex: 1;
+            min-width: 30%;
+            padding: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            background-color: #e9ecef;
+            color: #495057;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        .mode-btn.active {
+            background-color: #007bff;
+            color: white;
+            box-shadow: 0 3px 8px rgba(0,123,255,0.3);
+        }
+        .mode-btn:hover:not(.active) {
+            background-color: #dee2e6;
+        }
+        
+        /* Shared Text Styles */
+        .question, .case-title, .section-title {
+            font-size: 1.25em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            line-height: 1.4;
+        }
+        
+        /* Quiz Styles */
+        .btn-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .btn, .action-btn {
+            padding: 12px 20px;
+            font-size: 1em;
+            background-color: #fff;
+            border: 2px solid #dce0e4;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+        }
+        .btn:hover:not(:disabled) {
+            background-color: #e9ecef;
+            border-color: #adb5bd;
+        }
+        .btn.correct {
+            background-color: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+        .btn.wrong {
+            background-color: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+        .btn:disabled {
+            cursor: not-allowed;
+        }
+        .explanation, .case-answer-box {
+            display: none;
+            margin-top: 20px;
+            padding: 18px;
+            background-color: #e2f3f5;
+            border-left: 5px solid #17a2b8;
+            border-radius: 4px;
+            color: #0c5460;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
+        /* Flashcards (Practice) Styles */
+        details {
+            background-color: #fff;
+            border: 2px solid #dce0e4;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            padding: 12px 18px;
+            transition: all 0.3s;
+        }
+        details[open] {
+            border-color: #007bff;
+            box-shadow: 0 2px 10px rgba(0,123,255,0.1);
+        }
+        summary {
+            font-weight: 600;
+            font-size: 1.05em;
+            cursor: pointer;
+            color: #2c3e50;
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        summary::-webkit-details-marker {
+            display: none; /* Safari */
+        }
+        summary::after {
+            content: '+';
+            font-size: 1.5em;
+            color: #007bff;
+            font-weight: bold;
+        }
+        details[open] summary::after {
+            content: '−';
+        }
+        .practice-answer {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e9ecef;
+            color: #333;
+            line-height: 1.5;
+            font-size: 0.95em;
+        }
+        .practice-answer strong {
+            color: #007bff;
+        }
+
+        /* Cases Styles */
+        .case-scenario {
+            background-color: #f8f9fa;
+            border-left: 5px solid #6c757d;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 1.05em;
+            line-height: 1.5;
+            color: #333;
+            border-radius: 0 8px 8px 0;
+        }
+        .case-answer-box {
+            background-color: #e8f4fd;
+            border-left-color: #007bff;
+            color: #1c3d5a;
+        }
+
+        /* Buttons & Utils */
+        .action-btn {
+            width: 100%;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 15px;
+        }
+        .action-btn:hover {
+            background-color: #5a6268;
+        }
+        #next-btn, #next-case-btn {
+            background-color: #28a745;
+        }
+        #next-btn:hover, #next-case-btn:hover {
+            background-color: #218838;
+        }
+        .progress {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #6c757d;
+            font-weight: bold;
+            font-size: 0.95em;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-container">
+        <!-- Navigation Top Bar -->
+        <div class="mode-navigation">
+            <button class="mode-btn active" id="quiz-nav" onclick="switchMode('quiz')">Standard Quiz</button>
+            <button class="mode-btn" id="practice-nav" onclick="switchMode('practice')">Extensive Practice</button>
+            <button class="mode-btn" id="cases-nav" onclick="switchMode('cases')">Clinical Cases</button>
+        </div>
+
+        <!-- PROGRESS COUNTER -->
+        <div id="progress" class="progress"></div>
+
+        <!-- 1. QUIZ INTERFACE -->
+        <div id="quiz-section">
+            <div class="question" id="question">Question goes here...</div>
+            <div id="answer-buttons" class="btn-grid"></div>
+            <div id="explanation" class="explanation"></div>
+            <button id="next-btn" class="action-btn" onclick="setNextQuestion()">Next Question</button>
+        </div>
+
+        <!-- 2. EXTENSIVE PRACTICE INTERFACE (Flashcards) -->
+        <div id="practice-section" style="display: none;">
+            <div class="section-title">Flashcards: Course Review</div>
+            <p style="color: #6c757d; margin-bottom: 20px; font-size: 0.9em;">Click on any question to reveal the correct answer and explanation directly from your course.</p>
+            <div id="flashcards-container">
+                <!-- Flashcards injected via JS -->
+            </div>
+        </div>
+
+        <!-- 3. CLINICAL CASES INTERFACE -->
+        <div id="cases-section" style="display: none;">
+            <div class="case-title" id="case-title-display">Case Title</div>
+            <div class="case-scenario" id="case-scenario-display">Scenario details...</div>
+            <button id="reveal-case-btn" class="action-btn" onclick="revealCaseAnswer()">Reveal Professor's Questions & Answers</button>
+            <div id="case-answer" class="case-answer-box"></div>
+            <button id="next-case-btn" class="action-btn" onclick="setNextCase()">Next Clinical Case</button>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA SECTION ---
+
+        // 1. Standard Quiz Questions
+        const quizQuestions = [
+            {
+                question: "What is the Parkland formula for fluid resuscitation in major burns?",
+                answers: [
+                    { text: "2 ml x total burn surface area (%) x body weight (kg)", correct: false },
+                    { text: "4 ml x total burn surface area (%) x body weight (kg)", correct: true },
+                    { text: "4 ml x unaffected surface area x age", correct: false }
+                ],
+                explanation: "<strong>Correct answer:</strong> 4 ml x total burn surface area (%) x body weight (kg)[cite: 2].<br><br><strong>Explanation:</strong> This is the standard Parkland Formula[cite: 2]. From this total calculated volume for 24 hours, 50% is given in the first 8 hours, and the remaining 50% is given in the next 16 hours[cite: 2]."
+            },
+            {
+                question: "What are the stages of the wound-healing process in the correct order?",
+                answers: [
+                    { text: "Inflammation, Hemostasis, Remodeling, Proliferation", correct: false },
+                    { text: "Hemostasis, Inflammation, Proliferative, Remodeling", correct: true },
+                    { text: "Proliferative, Inflammation, Hemostasis, Remodeling", correct: false }
+                ],
+                explanation: "<strong>Correct answer:</strong> Hemostasis, Inflammation, Proliferative, Remodeling[cite: 2].<br><br><strong>Explanation:</strong> For bleeding wounds, the highest priority is to stop bleeding by hemostasis[cite: 2]. Then the inflammatory phase clears damaged cells, bacteria, and debris[cite: 2]. Next is the proliferative phase where granulation tissue forms[cite: 2], and finally the remodeling phase where the correct amount of collagen is formed[cite: 2]."
+            },
+            {
+                question: "How is a deep dermal burn (IIB) defined in terms of depth?",
+                answers: [
+                    { text: "It affects the epidermis but not the dermis.", correct: false },
+                    { text: "It extends through the epidermis into the deeper layers of the dermis and not through the entire dermis.", correct: true },
+                    { text: "It extends through the entire dermis and all regenerative elements are destroyed.", correct: false }
+                ],
+                explanation: "<strong>Correct answer:</strong> It extends through the epidermis into the deeper layers of the dermis and not through the entire dermis[cite: 2].<br><br><strong>Explanation:</strong> Deep dermal burns (IIB) affect the epidermis and deeper layers of the dermis without penetrating the entire dermis[cite: 2]. They are the most difficult to assess and treat[cite: 2], and all such injuries should be excised and grafted to reduce morbidity[cite: 2]."
+            }
+        ];
+
+        // 2. Extensive Practice Questions (Flashcards)
+        const practiceData = [
+            {
+                q: "What are the two phases of burn shock physiology?",
+                a: "<strong>1. The Ebb Phase:</strong> Post-burn hypovolemic shock caused by fluid extravasation[cite: 2].<br><strong>2. The Flow Phase:</strong> Systemic Inflammatory Response Syndrome (SIRS) designed to fight against aggression and prepare the body for healing[cite: 2]."
+            },
+            {
+                q: "When is an escharotomy indicated?",
+                a: "It is required for circumferential deep dermal or full thickness burns[cite: 2]. Because burnt tissue is inelastic, fluid resuscitation leads to edema that can impair peripheral circulation or mechanical restriction of breathing (on the chest)[cite: 2]."
+            },
+            {
+                q: "What is the difference between primary and secondary intention healing?",
+                a: "<strong>Primary Intention:</strong> Edge-to-edge healing where all tissues are closed with sutures; occurs in ideal wounds with no tissue loss[cite: 2].<br><strong>Secondary Intention:</strong> The wound is left open and closes naturally via wound contraction and re-epithelialization; occurs in open wounds with significant tissue loss[cite: 2]."
+            },
+            {
+                q: "What are the three phases of skin graft 'take' (revascularization)?",
+                a: "<strong>1. Phase 1 (24-48 hours):</strong> Process of serum imbibition where a fibrin layer binds the graft to the bed[cite: 2].<br><strong>2. Phase 2:</strong> Recipient and donor end capillaries are aligned[cite: 2].<br><strong>3. Phase 3:</strong> The graft is revascularized through these 'kissing' capillaries[cite: 2]."
+            },
+            {
+                q: "What is the primary difference between a skin graft and a skin flap?",
+                a: "A <strong>skin graft</strong> has no blood supply of its own and depends entirely on the vascularized bed where it is placed[cite: 2]. A <strong>skin flap</strong> is moved with an intact blood supply from the donor site[cite: 2]."
+            },
+            {
+                q: "What is the pathognomonic sign of a lightning strike?",
+                a: "A dendritic, arborescent, or fernlike branching erythematous pattern on the skin[cite: 2]."
+            },
+            {
+                q: "Why are alkali chemical burns generally worse than acid burns?",
+                a: "Alkali cause <strong>liquefaction necrosis</strong>, allowing the agent to penetrate deeper into the tissue[cite: 2]. Acids cause coagulation and precipitation of proteins, which tends to limit deeper penetration[cite: 2]."
+            },
+            {
+                q: "How is Acute Compartment Syndrome (ACS) confirmed via pressure measurement?",
+                a: "The diagnosis is confirmed if the compartment pressure is > 30 mmHg or when the delta pressure (diastolic pressure minus compartment pressure) is < 30 mmHg[cite: 2]."
+            },
+            {
+                q: "What is Volkmann ischemic contracture?",
+                a: "It is the late (chronic) stage of compartment syndrome[cite: 2]. It is the end result of prolonged ischemia, associated with irreversible tissue necrosis, muscle scarring, and fibrosis leading to deformity[cite: 2]."
+            },
+            {
+                q: "What are Kanavel's four cardinal signs of flexor tenosynovitis?",
+                a: "1. Fusiform swelling of the finger[cite: 2].<br>2. Partially flexed posture of the digit[cite: 2].<br>3. Tenderness over the entire flexor tendon sheath[cite: 2].<br>4. Disproportionate pain on passive extension[cite: 2]."
+            },
+            {
+                q: "What is a 'collar button' (or collar stud) abscess?",
+                a: "It occurs when an abscess spreads between distinct tissue layers through a small sinus tract, leading to an hourglass configuration[cite: 2]. A surgeon must explore thoroughly to avoid draining only the superficial component[cite: 2]."
+            },
+            {
+                q: "What is the 'protective' or 'safe position' for hand immobilization?",
+                a: "It requires three essential elements: interphalangeal (IP) joint extension, metacarpophalangeal (MCP) joint flexion, and palmar abduction of the thumb[cite: 2]. This keeps ligaments under stretch to prevent shortening[cite: 2]."
+            },
+            {
+                q: "What characterizes a Bennett's fracture?",
+                a: "It is a fracture plus dislocation of the metacarpal bone at the base of the thumb, usually resulting from an axial force applied to the thumb while in flexion[cite: 2]."
+            },
+            {
+                q: "What condition predisposes patients to multiple basal cell carcinomas (BCC) and is characterized by a defect in UV-induced DNA repair?",
+                a: "<strong>Xeroderma Pigmentosum:</strong> A disorder of excision repair of ultraviolet (UV) light-induced pyrimidine dimers in DNA[cite: 2]. Patients manifest acute photosensitivity and multiple cutaneous neoplasms early in life[cite: 2]."
+            },
+            {
+                q: "What are the clinical characteristics that differentiate early melanomas from benign pigmented lesions?",
+                a: "1. Variegated color (red, white, blue) or disarray of pigment[cite: 2].<br>2. Irregular borders (angular indentation or notching)[cite: 2].<br>3. Irregular surface[cite: 2].<br>4. A history of recent change in size or color[cite: 2]."
+            }
+        ];
+
+        // 3. Clinical Cases
+        const clinicalCases = [
+            {
+                title: "Case 1: Slow-growing Facial Lesion",
+                scenario: "A 65-year-old male presents with a 2 cm ulcerated lesion on his lower lip. He notes that it started as a small, slightly translucent, pearly papule with surrounding fine blood vessels (telangiectasia) and has been slowly growing over the last few years. He has a history of long-term cumulative sun exposure.",
+                qa: "<strong>1. What is your clinical diagnosis?</strong><br>• <em>Answer:</em> Basal Cell Carcinoma (BCC). The translucent, waxy, or pearly papule with overlying telangiectasia is classic for BCC on sun-damaged skin[cite: 2].<br><br><strong>2. Does this lesion metastasize frequently?</strong><br>• <em>Answer:</em> No, metastasis for BCC is quite rare[cite: 2].<br><br><strong>3. How do you confirm the diagnosis and what is the treatment?</strong><br>• <em>Answer:</em> Pathologic examination of a tissue specimen (e.g., punch biopsy). Surgical excision is often the treatment of choice[cite: 2]."
+            },
+            {
+                title: "Case 2: Severe Industrial Burn",
+                scenario: "A 30-year-old male weighing 80 kg is rushed to the burn unit after sustaining deep dermal burns covering 30% of his Total Body Surface Area (TBSA).",
+                qa: "<strong>1. How do you calculate his fluid resuscitation needs for the first 24 hours?</strong><br>• <em>Answer:</em> Using the Parkland Formula: 4 ml × TBSA (%) × Body Weight (kg)[cite: 2]. Calculation: 4 × 30 × 80 = 9,600 ml[cite: 2].<br><br><strong>2. How should this fluid volume be distributed?</strong><br>• <em>Answer:</em> 50% in the first 8 hours, and 50% in the next 16 hours[cite: 2]."
+            },
+            {
+                title: "Case 3: Hand Trauma",
+                scenario: "A patient presents with a history of hyperflexion of the joint after trauma. The DIP joint is flexed at rest and there is an inability to actively extend the distal phalanx.",
+                qa: "<strong>1. What is your diagnosis?</strong><br>• <em>Answer:</em> Mallet finger[cite: 2].<br><br><strong>2. What is the standard treatment?</strong><br>• <em>Answer:</em> Splinting of the DIP joint in slight hyperextension, worn day and night for 6 to 8 weeks to allow the tendon to heal[cite: 2]."
+            }
+        ];
+
+        // --- CORE APPLICATION LOGIC ---
+        let currentMode = 'quiz'; 
+        let currentQuizIndex = 0;
+        let currentCaseIndex = 0;
+
+        // Elements
+        const progressElement = document.getElementById('progress');
+        const quizSection = document.getElementById('quiz-section');
+        const practiceSection = document.getElementById('practice-section');
+        const casesSection = document.getElementById('cases-section');
+        
+        // Quiz Elements
+        const questionElement = document.getElementById('question');
+        const answerButtonsElement = document.getElementById('answer-buttons');
+        const explanationElement = document.getElementById('explanation');
+        const nextButton = document.getElementById('next-btn');
+
+        // Case Elements
+        const caseTitleDisplay = document.getElementById('case-title-display');
+        const caseScenarioDisplay = document.getElementById('case-scenario-display');
+        const revealCaseBtn = document.getElementById('reveal-case-btn');
+        const caseAnswerBox = document.getElementById('case-answer');
+        const nextCaseBtn = document.getElementById('next-case-btn');
+
+        function switchMode(mode) {
+            currentMode = mode;
+            document.getElementById('quiz-nav').classList.remove('active');
+            document.getElementById('practice-nav').classList.remove('active');
+            document.getElementById('cases-nav').classList.remove('active');
+
+            quizSection.style.display = 'none';
+            practiceSection.style.display = 'none';
+            casesSection.style.display = 'none';
+            progressElement.style.display = 'block';
+
+            if (mode === 'quiz') {
+                document.getElementById('quiz-nav').classList.add('active');
+                quizSection.style.display = 'block';
+                startQuiz();
+            } else if (mode === 'practice') {
+                document.getElementById('practice-nav').classList.add('active');
+                practiceSection.style.display = 'block';
+                progressElement.style.display = 'none'; // Hide progress counter for flashcards
+                renderFlashcards();
+            } else {
+                document.getElementById('cases-nav').classList.add('active');
+                casesSection.style.display = 'block';
+                startCases();
+            }
+        }
+
+        // --- QUIZ IMPLEMENTATION ---
+        function startQuiz() {
+            currentQuizIndex = 0;
+            setNextQuestion();
+        }
+
+        function setNextQuestion() {
+            resetQuizState();
+            progressElement.innerText = `Quiz Question ${currentQuizIndex + 1} of ${quizQuestions.length}`;
+            showQuestion(quizQuestions[currentQuizIndex]);
+        }
+
+        function showQuestion(question) {
+            questionElement.innerText = question.question;
+            question.answers.forEach(answer => {
+                const button = document.createElement('button');
+                button.innerText = answer.text;
+                button.classList.add('btn');
+                if (answer.correct) {
+                    button.dataset.correct = answer.correct;
+                }
+                button.addEventListener('click', selectAnswer);
+                answerButtonsElement.appendChild(button);
+            });
+        }
+
+        function resetQuizState() {
+            nextButton.style.display = 'none';
+            explanationElement.style.display = 'none';
+            explanationElement.innerHTML = '';
+            while (answerButtonsElement.firstChild) {
+                answerButtonsElement.removeChild(answerButtonsElement.firstChild);
+            }
+        }
+
+        function selectAnswer(e) {
+            const selectedButton = e.target;
+            Array.from(answerButtonsElement.children).forEach(button => {
+                setStatusClass(button, button.dataset.correct === "true");
+                button.disabled = true;
+            });
+
+            explanationElement.innerHTML = quizQuestions[currentQuizIndex].explanation;
+            explanationElement.style.display = 'block';
+
+            if (quizQuestions.length > currentQuizIndex + 1) {
+                nextButton.innerText = 'Next Question';
+                nextButton.style.display = 'block';
+                currentQuizIndex++;
+            } else {
+                nextButton.innerText = 'Restart Quiz';
+                nextButton.style.display = 'block';
+                nextButton.onclick = () => {
+                    nextButton.onclick = setNextQuestion; 
+                    startQuiz();
+                };
+            }
+        }
+
+        function setStatusClass(element, correct) {
+            if (correct) {
+                element.classList.add('correct');
+            } else {
+                element.classList.add('wrong');
+            }
+        }
+
+        // --- FLASHCARDS IMPLEMENTATION ---
+        function renderFlashcards() {
+            const container = document.getElementById('flashcards-container');
+            container.innerHTML = ''; // Clear previous
+            
+            practiceData.forEach((item, index) => {
+                const details = document.createElement('details');
+                const summary = document.createElement('summary');
+                const answerDiv = document.createElement('div');
+                
+                summary.innerText = `${index + 1}. ${item.q}`;
+                answerDiv.className = 'practice-answer';
+                answerDiv.innerHTML = item.a;
+                
+                details.appendChild(summary);
+                details.appendChild(answerDiv);
+                container.appendChild(details);
+            });
+        }
+
+        // --- CLINICAL CASES IMPLEMENTATION ---
+        function startCases() {
+            currentCaseIndex = 0;
+            setNextCaseData();
+        }
+
+        function setNextCaseData() {
+            resetCasesState();
+            progressElement.innerText = `Clinical Case ${currentCaseIndex + 1} of ${clinicalCases.length}`;
+            
+            const currentCase = clinicalCases[currentCaseIndex];
+            caseTitleDisplay.innerText = currentCase.title;
+            caseScenarioDisplay.innerText = currentCase.scenario;
+            caseAnswerBox.innerHTML = currentCase.qa;
+        }
+
+        function resetCasesState() {
+            caseAnswerBox.style.display = 'none';
+            nextCaseBtn.style.display = 'none';
+            revealCaseBtn.style.display = 'block';
+        }
+
+        function revealCaseAnswer() {
+            revealCaseBtn.style.display = 'none';
+            caseAnswerBox.style.display = 'block';
+            nextCaseBtn.style.display = 'block';
+        }
+
+        function setNextCase() {
+            if (clinicalCases.length > currentCaseIndex + 1) {
+                currentCaseIndex++;
+                setNextCaseData();
+            } else {
+                alert("You have completed all clinical case scenarios! Restarting section.");
+                startCases();
+            }
+        }
+
+        // Initialize App
+        switchMode('quiz');
+    </script>
+</body>
+</html>
